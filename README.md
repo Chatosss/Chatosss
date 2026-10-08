@@ -1,36 +1,36 @@
-# Oi, eu sou o Leonardo 👋
+# Wallisson Leonardo
 
-Web designer desde 2018. Crio sites e landing pages pensados para **converter**, não só para ficar bonitos.
+Desenvolvedor focado em automações e integrações, em transição para desenvolvimento Python.
 
-Hoje meu foco é a presença digital de médicos especialistas, dentistas e marcas premium: páginas que explicam bem o serviço, filtram o lead certo e levam a pessoa até o WhatsApp ou o agendamento.
+Desde 2018 atendo clientes pela Leo Pages, primeiro com sites e depois com automações de atendimento, agendamento e cobrança. Esse trabalho me ensinou a entender o problema do negócio antes de pensar na ferramenta e a entregar algo que funcione no dia a dia de quem usa. Agora estou buscando minha primeira oportunidade júnior em Python, automação ou integrações, de preferência em empresas do mercado financeiro, área em que quero me especializar.
 
-### O que eu faço
+## Experiência prática
 
-- Sites institucionais e landing pages de alta conversão
-- Páginas de lançamento, eventos e captação de leads
-- Lojas virtuais e páginas de produto
-- Migração de layout do Figma para código ou WordPress
+- Fluxos no n8n integrando APIs, webhooks e WhatsApp para atendimento automatizado
+- Automações de agendamento e de cobrança para clientes
+- Sites e landing pages para clientes de saúde, serviços, SaaS e e-commerce
+- Deploy contínuo de sites com GitHub Actions (build e envio por FTP para a hospedagem)
+- Levantamento de requisitos direto com o cliente, ajustes e suporte depois da entrega
 
-### Com o que eu trabalho
+## Projetos
 
-[![Stack](https://skillicons.dev/icons?i=figma,react,ts,vite,tailwind,wordpress,html,css,git)](https://skillicons.dev)
-
-React + TypeScript + Tailwind nos projetos em código, WordPress com Elementor Pro quando o cliente precisa editar sozinho, e Figma do início ao fim.
-
-### Alguns projetos no ar
-
-| Projeto | Segmento |
+| Projeto | O que é |
 |---|---|
-| [uzenails.com.br](https://uzenails.com.br) | E-commerce de beleza |
-| [colccibarigui.com.br](https://colccibarigui.com.br) | E-commerce |
-| [leonardopages.com](https://leonardopages.com) | Meu site e portfólio |
+| [remix-of-br-aeroport-360](https://github.com/Chatosss/remix-of-br-aeroport-360) | Landing page de um SaaS de análise de obstáculos aeroportuários, com formulários validados que enviam leads para um endpoint externo |
+| [zen-bloom-landing](https://github.com/Chatosss/zen-bloom-landing) | Site de um espaço de saúde e bem-estar com página dinâmica para cada serviço |
 
-Já entreguei páginas para saúde e estética, contabilidade, TI, restaurante, estúdio de áudio, agências, SaaS, lançamentos de curso e eventos presenciais. A lista completa está no [portfólio](https://beacons.ai/leoadsbr).
+Os dois são projetos de clientes. A interface foi gerada e iterada no Lovable e eu configurei o deploy automático. Os detalhes estão no README de cada um.
 
-### Vamos conversar
+## Tecnologias
 
-[![Site](https://img.shields.io/badge/leonardopages.com-111111?style=for-the-badge&logo=googlechrome&logoColor=white)](https://leonardopages.com)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/wallisson-leonardo)
-[![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/5582996619912)
+**Uso em projetos reais:** n8n, APIs REST e webhooks, integrações com WhatsApp, Git e GitHub, GitHub Actions, HTML, CSS, JavaScript, React com TypeScript, WordPress
 
-Tem um projeto em mente? Me chama no WhatsApp que eu respondo rápido.
+**Em estudo:** Python (concluí a trilha Aprendendo Python da Asimov), Git e GitHub (curso concluído), graduação em Análise e Desenvolvimento de Sistemas
+
+## Próximos passos
+
+Estou praticando Python com automação de tarefas e consumo de APIs. A direção de longo prazo é aplicar programação e análise de dados ao mercado financeiro.
+
+## Contato
+
+[LinkedIn](https://www.linkedin.com/in/wallisson-leonardo) · [WhatsApp](https://wa.me/5582996619912) · [Portfólio de sites](https://beacons.ai/leoadsbr)
