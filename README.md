@@ -25,12 +25,19 @@ Os dois são projetos de clientes. A interface foi gerada e iterada no Lovable e
 
 **Uso em projetos reais:** n8n, APIs REST e webhooks, integrações com WhatsApp, Git e GitHub, GitHub Actions, HTML, CSS, JavaScript, React com TypeScript, WordPress
 
-**Em estudo:** Python (concluí a trilha Aprendendo Python da Asimov), Git e GitHub (curso concluído), graduação em Análise e Desenvolvimento de Sistemas
+**Em estudo:** Python, Pandas e SQL
+
+## Formação
+
+- Aprendendo Python (Asimov Academy), concluído
+- Analisando Dados com Pandas e SQL (Asimov Academy), concluído
+- Git e GitHub, concluído
+- Análise e Desenvolvimento de Sistemas (UniFatecie), em andamento
 
 ## Próximos passos
 
-Estou praticando Python com automação de tarefas e consumo de APIs. A direção de longo prazo é aplicar programação e análise de dados ao mercado financeiro.
+Estou praticando Python, Pandas e SQL com automação de tarefas, análise de dados e consumo de APIs. A direção de longo prazo é aplicar programação e análise de dados ao mercado financeiro.
 
 ## Contato
 
-[LinkedIn](https://www.linkedin.com/in/wallisson-leonardo) · [WhatsApp](https://wa.me/5582996619912) · [Portfólio de sites](https://beacons.ai/leoadsbr)
+[wallisson.leo@gmail.com](mailto:wallisson.leo@gmail.com) · [LinkedIn](https://www.linkedin.com/in/wallisson-leonardo) · [WhatsApp](https://wa.me/5582996619912) · [Portfólio de sites](https://beacons.ai/leoadsbr)
