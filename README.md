@@ -29,10 +29,10 @@ Os dois são projetos de clientes. A interface foi gerada e iterada no Lovable e
 
 ## Formação
 
+- Engenharia da Computação (UniFatecie), em andamento
 - Aprendendo Python (Asimov Academy), concluído
 - Analisando Dados com Pandas e SQL (Asimov Academy), concluído
 - Git e GitHub, concluído
-- Análise e Desenvolvimento de Sistemas (UniFatecie), em andamento
 
 ## Próximos passos
 
