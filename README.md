@@ -2,31 +2,29 @@
 
 **Automação, integrações e dados com Python.** 8 anos entregando soluções para empresas, agora com foco no mercado financeiro.
 
-Passei os últimos anos do lado do cliente pela Leo Pages. Comecei com sites e evoluí para automações que fazem parte da operação de pequenas empresas: atendimento pelo WhatsApp, agendamento e cobrança, com sistemas conectados por APIs e webhooks.
+Passei os últimos anos do lado do cliente pela Leo Pages. Comecei com sites e evoluí para automações que fazem parte da operação de pequenas empresas: atendimento pelo WhatsApp, agendamento e cobrança, com sistemas conectados por APIs e webhooks. Em paralelo, passei a escrever minhas próprias ferramentas em Python, de prospecção a um robô que opera ouro numa conta de mesa proprietária.
 
-Isso mudou a forma como eu programo. Antes de escrever código, quero entender qual processo está travando, quanto tempo ele consome e como vamos medir se resolveu.
+Antes de escrever código, quero entender qual processo está travando, quanto tempo ele consome e como vamos medir se resolveu.
 
-## O que já entreguei
-
-- Automações de atendimento, agendamento e cobrança no n8n, integrando APIs, webhooks e WhatsApp
-- Sites e landing pages em React com TypeScript e em WordPress para clientes de saúde, serviços, SaaS e e-commerce
-- Deploy contínuo com GitHub Actions, com build e publicação automática na hospedagem
-- Levantamento de requisitos, negociação de escopo e suporte depois da entrega
-
-## Projetos públicos
+## Projetos
 
 | Projeto | O que é |
 |---|---|
-| [remix-of-br-aeroport-360](https://github.com/Chatosss/remix-of-br-aeroport-360) | Landing page de um SaaS de análise de obstáculos aeroportuários, com formulários validados que enviam leads para um endpoint externo |
-| [zen-bloom-landing](https://github.com/Chatosss/zen-bloom-landing) | Site de um espaço de saúde e bem-estar com página dinâmica para cada serviço |
+| [leadforge](https://github.com/Chatosss/leadforge) | Ferramenta de prospecção B2B: coleta no Google Maps, qualificação, proposta em PDF e contato por WhatsApp, Instagram e e-mail, com limite de envio por conta e painel local |
+| [xauusd-trend-bot](https://github.com/Chatosss/xauusd-trend-bot) | Robô de tendência para ouro no MetaTrader 5, com trailing ativo, regras de mesa proprietária, sentinela de erros e validação por Monte Carlo |
+| [forex-backtest](https://github.com/Chatosss/forex-backtest) | Motor de backtest com custo real de corretora, 96 testes em 6 ativos e painel comparativo |
+| [finapp](https://github.com/Chatosss/finapp) | API de finanças pessoais em FastAPI: lê nota fiscal pelo QR code e extrato bancário, com assistente de IA que usa ferramentas |
+| [maps-scraper](https://github.com/Chatosss/maps-scraper) | Coletor de empresas do Google Maps com Playwright, cache em SQLite e interface gráfica |
 
-Os dois são projetos de clientes. A interface foi gerada e iterada no Lovable e eu configurei o deploy automático. Os detalhes estão no README de cada um.
+Também mantenho sites de clientes em React e TypeScript, como [zen-bloom-landing](https://github.com/Chatosss/zen-bloom-landing) e [remix-of-br-aeroport-360](https://github.com/Chatosss/remix-of-br-aeroport-360), com deploy automático por GitHub Actions.
 
 ## Stack
 
-**Em produção com clientes:** n8n · APIs REST · webhooks · WhatsApp · Git · GitHub Actions · JavaScript · React · TypeScript · WordPress
+**Python:** pandas, NumPy, FastAPI, SQLAlchemy, Flask, Playwright, SQLite, pytest, MetaTrader5
 
-**Em desenvolvimento:** Python · Pandas · SQL
+**Integrações e automação:** APIs REST, webhooks, n8n, WhatsApp, GitHub Actions
+
+**Web:** JavaScript, Node.js, React, TypeScript, WordPress
 
 ## Formação
 
@@ -37,9 +35,7 @@ Os dois são projetos de clientes. A interface foi gerada e iterada no Lovable e
 
 ## Agora
 
-Praticando Python, Pandas e SQL em automação de tarefas, análise de dados e consumo de APIs. Acompanho o mercado de câmbio de perto e quero aplicar automação e dados no mercado financeiro.
-
-Buscando uma vaga júnior remota em Python, automação, integrações ou dados.
+Buscando uma vaga júnior remota em Python, automação, integrações ou dados, de preferência no mercado financeiro.
 
 ## Contato
 
