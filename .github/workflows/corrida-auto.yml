@@ -53,6 +53,11 @@ jobs:
             -PbranchPadroes=${{ github.ref_name }}
           cp app/build/outputs/apk/release/app-release.apk corrida-auto.apk
 
+      - name: Conferir assinatura
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs corrida-auto.apk | grep -E "DN|SHA-256"
+
       - name: Publicar release
         uses: softprops/action-gh-release@v2
         with:
