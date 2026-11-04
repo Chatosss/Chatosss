@@ -18,16 +18,8 @@ object LeitorDeOferta {
     private val regexKm = Regex("""(\d+(?:[.,]\d+)?)\s*km\b""", RegexOption.IGNORE_CASE)
     private val regexMetros = Regex("""(?<![\d.,])(\d{1,4})\s*m\b(?!in)""", RegexOption.IGNORE_CASE)
 
-    /** Textos usados pelos apps em ofertas de "corrida em sequência". */
-    private val sequencia = listOf(
-        "apos o desembarque", "apos a viagem atual", "depois desta viagem", "apos esta viagem",
-        "apos deixar", "proxima viagem", "viagem em sequencia", "corrida em sequencia", "after this trip",
-    )
-
-    /** Palavras que indicam que a tela é de fato uma oferta de corrida. */
-    private val gatilhos = listOf("aceitar", "accept", "toque para aceitar", "nova corrida", "nova solicitacao")
-
-    fun ler(textos: List<String>, plataforma: Plataforma): Oferta? {
+    fun ler(textos: List<String>, plataforma: Plataforma, padroes: Padroes = PadroesAtivos.atual): Oferta? {
+        val gatilhos = padroes.gatilhosOferta
         val linhas = textos.map { it.trim() }.filter { it.isNotEmpty() }
         if (linhas.isEmpty()) return null
 
@@ -63,7 +55,7 @@ object LeitorDeOferta {
         val destino = linhas.drop(iUltima + 1).filterNot(ehRuido).joinToString(" | ")
             .ifBlank { tudo } // sem estrutura clara: usa a tela toda
 
-        val emSequencia = sequencia.any { it in tudoNorm }
+        val emSequencia = padroes.sequencia.any { it in tudoNorm }
         return Oferta(plataforma, valor, kmBusca, kmViagem, origem, destino, tudo, emSequencia)
     }
 

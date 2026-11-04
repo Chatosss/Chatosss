@@ -1,0 +1,65 @@
+name: Corrida Auto – APK
+
+on:
+  push:
+    branches: [claude/ride-acceptance-manager-u73mzf, main]
+    paths:
+      - "corrida-auto/**"
+      - "!corrida-auto/padroes-remotos.json" # padrões remotos não precisam de APK novo
+      - "!corrida-auto/**.md"
+      - ".github/workflows/corrida-auto.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: corrida-auto-apk
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: corrida-auto
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+
+      - name: Testes do núcleo
+        run: gradle :core:test --no-daemon
+
+      - name: Compilar APK
+        env:
+          ASSINATURA_JKS_BASE64: ${{ secrets.ASSINATURA_JKS_BASE64 }}
+          ASSINATURA_SENHA: ${{ secrets.ASSINATURA_SENHA }}
+          ASSINATURA_ALIAS: ${{ secrets.ASSINATURA_ALIAS }}
+        run: |
+          gradle :app:assembleRelease --no-daemon \
+            -PversionCode=${{ github.run_number }} \
+            -PbranchPadroes=${{ github.ref_name }}
+          cp app/build/outputs/apk/release/app-release.apk corrida-auto.apk
+
+      - name: Publicar release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Corrida Auto 0.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          make_latest: "true"
+          files: corrida-auto/corrida-auto.apk
+          body: |
+            ${{ secrets.ASSINATURA_JKS_BASE64 == '' && '⚠️ Assinatura temporária (secrets ASSINATURA_* não configurados): esta versão não atualiza por cima de outra.' || '' }}
+            Build automático de ${{ github.ref_name }} (${{ github.sha }}).
+            ${{ github.event.head_commit.message }}

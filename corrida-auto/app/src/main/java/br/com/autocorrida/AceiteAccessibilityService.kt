@@ -12,6 +12,7 @@ import br.com.autocorrida.core.Decisao
 import br.com.autocorrida.core.LeitorDeEstado
 import br.com.autocorrida.core.LeitorDeOferta
 import br.com.autocorrida.core.MotorDeRegras
+import br.com.autocorrida.core.PadroesAtivos
 import br.com.autocorrida.core.Plataforma
 import br.com.autocorrida.core.RastreadorDeCorrida
 
@@ -30,18 +31,17 @@ class AceiteAccessibilityService : AccessibilityService() {
     private var ultimaAssinatura: String? = null
     private var ultimaAssinaturaEm = 0L
 
-    private val rotulosAceitar = listOf(
-        "aceitar", "aceitar corrida", "aceitar viagem", "toque para aceitar", "accept", "aceitar por",
-    )
-
     override fun onServiceConnected() {
         config = Configuracoes(this)
+        AtualizacaoRemota.carregarCache(this)
+        AtualizacaoRemota.verificar(this, forcar = true)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val pacote = event.packageName?.toString() ?: return
         val plataforma = Plataforma.doPacote(pacote)
         if (plataforma == Plataforma.DESCONHECIDA) return
+        AtualizacaoRemota.verificar(this) // no máximo a cada 5 min; roda em segundo plano
 
         val raizes = raizesDoApp(pacote)
         if (raizes.isEmpty()) return
@@ -105,8 +105,8 @@ class AceiteAccessibilityService : AccessibilityService() {
     }
 
     private fun acharAceitar(no: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-        val t = (no.text ?: no.contentDescription)?.toString()?.lowercase()?.trim()
-        if (t != null && rotulosAceitar.any { t == it || t.startsWith("$it ") }) return no
+        val t = (no.text ?: no.contentDescription)?.toString()
+        if (t != null && PadroesAtivos.atual.ehRotuloAceitar(t)) return no
         for (i in 0 until no.childCount) {
             no.getChild(i)?.let { filho -> acharAceitar(filho)?.let { return it } }
         }

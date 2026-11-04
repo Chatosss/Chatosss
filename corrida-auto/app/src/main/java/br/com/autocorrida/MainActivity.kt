@@ -23,6 +23,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         config = Configuracoes(this)
         preencher(config.carregar())
+        AtualizacaoRemota.carregarCache(this)
+
+        findViewById<Button>(R.id.btnAtualizar).setOnClickListener {
+            AtualizacaoRemota.verificar(this, forcar = true) { msg ->
+                runOnUiThread {
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                    atualizarStatus()
+                }
+            }
+            Atualizador.verificar(this, avisarSeAtual = true)
+        }
+        Atualizador.verificar(this)
 
         findViewById<Button>(R.id.btnAcessibilidade).setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -53,6 +65,8 @@ class MainActivity : AppCompatActivity() {
             Fase.EM_VIAGEM -> "Em viagem" + (e.kmRestante?.let { " – faltam %.1f km".format(it) } ?: "")
         }
         findViewById<TextView>(R.id.txtStatus).text = "Estado: $fase"
+        findViewById<TextView>(R.id.txtVersao).text =
+            "App ${BuildConfig.VERSION_NAME} · padrões de leitura v${AtualizacaoRemota.versaoAtual()}"
         findViewById<TextView>(R.id.txtHistorico).text = Historico.texto().ifEmpty { "Nenhuma oferta ainda." }
     }
 

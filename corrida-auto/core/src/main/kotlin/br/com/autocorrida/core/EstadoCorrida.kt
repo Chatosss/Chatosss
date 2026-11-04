@@ -33,34 +33,19 @@ data class EstadoAtual(
  */
 object LeitorDeEstado {
 
-    private val marcadoresViagem = listOf(
-        "finalizar viagem", "encerrar viagem", "concluir viagem", "finalizar corrida",
-        "encerrar corrida", "concluir corrida", "deixar passageiro", "deslize para finalizar",
-        "end trip", "complete trip",
-    )
-    private val marcadoresBusca = listOf(
-        "iniciar viagem", "iniciar corrida", "cheguei", "chegou ao local", "aguardando passageiro",
-        "buscando passageiro", "a caminho do passageiro", "indo buscar", "start trip", "arrived",
-    )
-    private val marcadoresLivre = listOf(
-        "procurando viagens", "procurando corridas", "voce esta online", "voce esta disponivel",
-        "avaliar passageiro", "avalie o passageiro", "corrida finalizada", "viagem finalizada",
-        "viagem concluida", "corrida concluida", "finding trips", "you're online",
-    )
-
     private val regexKm = Regex("""(\d+(?:[.,]\d+)?)\s*km\b""", RegexOption.IGNORE_CASE)
     private val regexMetros = Regex("""(?<![\d.,])(\d{1,4})\s*m\b(?!in)""", RegexOption.IGNORE_CASE)
-    private val regexManobra = Regex("""\b(vire|siga|em \d|mantenha|pegue|saia|retorno|rotatoria|turn|continue)\b""")
+    private val regexEmMetros = Regex("""\bem \d""")
 
-    fun ler(textos: List<String>): LeituraDeEstado? {
+    fun ler(textos: List<String>, padroes: Padroes = PadroesAtivos.atual): LeituraDeEstado? {
         val linhas = textos.map { it.trim() }.filter { it.isNotEmpty() }
         val norm = linhas.map(Texto::normalizar)
         val tudo = norm.joinToString("\n")
 
         return when {
-            marcadoresViagem.any { it in tudo } -> LeituraDeEstado(Fase.EM_VIAGEM, kmRestante(linhas, norm))
-            marcadoresBusca.any { it in tudo } -> LeituraDeEstado(Fase.INDO_BUSCAR, null)
-            marcadoresLivre.any { it in tudo } -> LeituraDeEstado(Fase.LIVRE, null)
+            padroes.marcadoresViagem.any { it in tudo } -> LeituraDeEstado(Fase.EM_VIAGEM, kmRestante(linhas, norm, padroes))
+            padroes.marcadoresBusca.any { it in tudo } -> LeituraDeEstado(Fase.INDO_BUSCAR, null)
+            padroes.marcadoresLivre.any { it in tudo } -> LeituraDeEstado(Fase.LIVRE, null)
             else -> null
         }
     }
@@ -69,8 +54,11 @@ object LeitorDeEstado {
      * Distância restante até o destino. Prefere a linha de previsão de chegada
      * ("3 min · 0,8 km"), ignorando instruções de manobra ("Em 200 m vire à direita").
      */
-    internal fun kmRestante(linhas: List<String>, norm: List<String>): Double? {
-        val candidatas = linhas.indices.filterNot { regexManobra.containsMatchIn(norm[it]) }
+    internal fun kmRestante(linhas: List<String>, norm: List<String>, padroes: Padroes): Double? {
+        val ehManobra = { n: String ->
+            regexEmMetros.containsMatchIn(n) || padroes.palavrasManobra.any { Texto.contemPalavra(n, it) }
+        }
+        val candidatas = linhas.indices.filterNot { ehManobra(norm[it]) }
         val comEta = candidatas.filter { "min" in norm[it] }
         for (i in comEta + candidatas) {
             distancia(linhas[i])?.let { return it }

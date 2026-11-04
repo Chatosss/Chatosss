@@ -49,14 +49,56 @@ core/   Kotlin puro: leitura da tela (LeitorDeOferta, LeitorDeEstado) e regras (
 app/    App Android: serviço de acessibilidade, tela de configuração e histórico de decisões
 ```
 
-## Como compilar e instalar
+## Instalar o APK
 
-1. Instale o Android Studio e abra a pasta `corrida-auto/`.
-2. Rode em um celular Android 8+ (`Run ▶`) ou gere o APK em *Build → Build APK*.
-3. No app: **Ativar serviço de acessibilidade** → ative "Corrida Auto".
+**Link fixo da última versão:**
+https://github.com/Chatosss/Chatosss/releases/latest/download/corrida-auto.apk
+
+1. Abra o link no celular e baixe o APK.
+2. Permita "instalar apps desconhecidos" para o navegador, quando o Android pedir.
+3. Abra o Corrida Auto → **Ativar serviço de acessibilidade** → ative "Corrida Auto".
 4. Configure os filtros, ligue "Aceite automático" e toque em **Salvar**.
 
-Testes da lógica (não precisa de Android SDK): `gradle :core:test`.
+O APK é gerado pelo GitHub Actions (`.github/workflows/corrida-auto.yml`) a cada push que muda o código:
+roda os testes, compila, assina e publica a release `v<número>`.
+
+## Atualizações depois de instalado
+
+| O que mudou | Como chega no celular | Precisa reinstalar? |
+|---|---|---|
+| Textos que o app procura na tela (`padroes-remotos.json`) | O app baixa sozinho a cada 5 min enquanto o serviço está rodando, ou ao tocar em **Buscar atualizações** | Não |
+| Código do app | Novo APK publicado; ao abrir o app aparece **"Nova versão disponível"** → Atualizar | Só um toque para confirmar (exigência do Android) |
+
+Na primeira atualização o Android pede para permitir que o Corrida Auto instale apps; é só permitir uma vez.
+Configurações e filtros são mantidos.
+
+### Ajustando os padrões de leitura
+
+Se uma tela do Uber/99 não for reconhecida, adicione o texto dela em `padroes-remotos.json`
+(ex.: um novo nome do botão em `rotulosAceitar`), aumente o campo `versao` e faça push.
+Mudanças só nesse arquivo não geram APK novo. A tela inicial do app mostra a versão dos padrões em uso.
+
+### Assinatura (necessária para as atualizações)
+
+O Android só instala uma atualização por cima se ela for assinada pela mesma chave. A chave **não**
+fica no repositório (que é público). Ela fica nos *secrets* do GitHub:
+*Settings → Secrets and variables → Actions → New repository secret*:
+
+| Secret | Valor |
+|---|---|
+| `ASSINATURA_JKS_BASE64` | o arquivo .jks em base64 |
+| `ASSINATURA_SENHA` | a senha da chave |
+| `ASSINATURA_ALIAS` | o alias da chave |
+
+Para gerar uma chave: `keytool -genkeypair -keystore corrida-auto.jks -alias corrida-auto -keyalg RSA -keysize 2048 -validity 10000`
+e depois `base64 -w0 corrida-auto.jks`.
+
+Sem os secrets, o APK sai com uma chave de teste temporária. Ele funciona, mas a próxima atualização
+não instala por cima: é preciso desinstalar e instalar de novo.
+
+## Compilar localmente
+
+Abra `corrida-auto/` no Android Studio e rode (`Run ▶`). Testes da lógica, sem Android SDK: `gradle :core:test`.
 
 ## Limitações e avisos
 
