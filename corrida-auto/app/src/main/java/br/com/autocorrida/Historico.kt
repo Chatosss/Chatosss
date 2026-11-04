@@ -16,7 +16,7 @@ object Historico {
     var aoMudar: (() -> Unit)? = null
 
     @Synchronized
-    fun registrar(d: Decisao, tocou: Boolean? = null) {
+    fun registrar(d: Decisao, tocou: Boolean? = null, recusou: Boolean? = null) {
         val o = d.oferta
         val base = "%s %s R$ %.2f | busca %s | viagem %s".format(
             hora.format(Date()), o.plataforma, o.valor, km(o.kmBusca), km(o.kmViagem),
@@ -28,7 +28,15 @@ object Historico {
                 if (d.emSequencia) append(" | sequência, busca do fim: ${km(d.kmBuscaUsado)}")
                 if (tocou == false) append(" | ⚠ botão Aceitar não encontrado")
             }
-            is Decisao.Recusar -> "❌ $base | ${d.motivos.joinToString("; ")}"
+            is Decisao.Recusar -> buildString {
+                append(if (recusou == true) "🚫 " else "❌ ").append(base)
+                append(" | ").append(d.motivos.joinToString("; "))
+                when (recusou) {
+                    true -> append(" | recusada automaticamente")
+                    false -> append(" | ⚠ botão Recusar não encontrado")
+                    null -> {}
+                }
+            }
         }
         itens.addFirst(linha)
         while (itens.size > MAX) itens.removeLast()

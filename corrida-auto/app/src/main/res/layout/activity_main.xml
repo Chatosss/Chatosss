@@ -99,6 +99,20 @@
             android:inputType="textMultiLine|textCapWords"
             android:minLines="2" />
 
+        <TextView style="@style/Titulo" android:text="Recusa automática" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swRecusarPorKm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Recusar automaticamente abaixo do R$/km mínimo" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swRecusarOutros"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Recusar também por bairro, distância ou valor mínimo" />
+
         <TextView style="@style/Titulo" android:text="Quando já estou em corrida" />
 
         <com.google.android.material.materialswitch.MaterialSwitch

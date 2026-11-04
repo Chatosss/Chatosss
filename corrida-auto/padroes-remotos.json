@@ -1,11 +1,89 @@
 {
   "_comentario": "Textos que o app Corrida Auto procura na tela. Edite e faça push: os celulares baixam em poucos minutos, sem reinstalar. Aumente 'versao' a cada mudança. Listas ausentes usam o padrão embutido no app.",
-  "versao": 1,
-  "gatilhosOferta": ["aceitar", "accept", "toque para aceitar", "nova corrida", "nova solicitação"],
-  "sequencia": ["após o desembarque", "após a viagem atual", "depois desta viagem", "após esta viagem", "após deixar", "próxima viagem", "viagem em sequência", "corrida em sequência", "after this trip"],
-  "rotulosAceitar": ["aceitar", "aceitar corrida", "aceitar viagem", "toque para aceitar", "accept", "aceitar por"],
-  "marcadoresViagem": ["finalizar viagem", "encerrar viagem", "concluir viagem", "finalizar corrida", "encerrar corrida", "concluir corrida", "deixar passageiro", "deslize para finalizar", "end trip", "complete trip"],
-  "marcadoresBusca": ["iniciar viagem", "iniciar corrida", "cheguei", "chegou ao local", "aguardando passageiro", "buscando passageiro", "a caminho do passageiro", "indo buscar", "start trip", "arrived"],
-  "marcadoresLivre": ["procurando viagens", "procurando corridas", "você está online", "você está disponível", "avaliar passageiro", "avalie o passageiro", "corrida finalizada", "viagem finalizada", "viagem concluída", "corrida concluída", "finding trips", "you're online"],
-  "palavrasManobra": ["vire", "siga", "mantenha", "pegue", "saia", "retorno", "rotatória", "turn", "continue"]
+  "versao": 2,
+  "gatilhosOferta": [
+    "aceitar",
+    "accept",
+    "toque para aceitar",
+    "nova corrida",
+    "nova solicitação"
+  ],
+  "sequencia": [
+    "após o desembarque",
+    "após a viagem atual",
+    "depois desta viagem",
+    "após esta viagem",
+    "após deixar",
+    "próxima viagem",
+    "viagem em sequência",
+    "corrida em sequência",
+    "after this trip"
+  ],
+  "rotulosAceitar": [
+    "aceitar",
+    "aceitar corrida",
+    "aceitar viagem",
+    "toque para aceitar",
+    "accept",
+    "aceitar por"
+  ],
+  "rotulosRecusar": [
+    "recusar",
+    "rejeitar",
+    "ignorar",
+    "dispensar",
+    "não aceitar",
+    "pular",
+    "decline",
+    "reject"
+  ],
+  "marcadoresViagem": [
+    "finalizar viagem",
+    "encerrar viagem",
+    "concluir viagem",
+    "finalizar corrida",
+    "encerrar corrida",
+    "concluir corrida",
+    "deixar passageiro",
+    "deslize para finalizar",
+    "end trip",
+    "complete trip"
+  ],
+  "marcadoresBusca": [
+    "iniciar viagem",
+    "iniciar corrida",
+    "cheguei",
+    "chegou ao local",
+    "aguardando passageiro",
+    "buscando passageiro",
+    "a caminho do passageiro",
+    "indo buscar",
+    "start trip",
+    "arrived"
+  ],
+  "marcadoresLivre": [
+    "procurando viagens",
+    "procurando corridas",
+    "você está online",
+    "você está disponível",
+    "avaliar passageiro",
+    "avalie o passageiro",
+    "corrida finalizada",
+    "viagem finalizada",
+    "viagem concluída",
+    "corrida concluída",
+    "finding trips",
+    "you're online"
+  ],
+  "palavrasManobra": [
+    "vire",
+    "siga",
+    "mantenha",
+    "pegue",
+    "saia",
+    "retorno",
+    "rotatória",
+    "turn",
+    "continue"
+  ]
 }

@@ -91,16 +91,21 @@ class AceiteAccessibilityService : AccessibilityService() {
         ultimaAssinatura = assinatura
         ultimaAssinaturaEm = agora
 
-        val decisao = MotorDeRegras.avaliar(oferta, config.carregar(), rastreador.estadoParaDecisao())
-        if (decisao !is Decisao.Aceitar) {
-            Historico.registrar(decisao)
-            return
-        }
+        val regras = config.carregar()
+        val decisao = MotorDeRegras.avaliar(oferta, regras, rastreador.estadoParaDecisao())
+        when {
+            decisao is Decisao.Aceitar -> handler.postDelayed({
+                val tocou = tocarEmBotao(pacote) { PadroesAtivos.atual.ehRotuloAceitar(it) }
+                Historico.registrar(decisao, tocou = tocou)
+            }, config.atrasoMs)
 
-        handler.postDelayed({
-            val tocou = tocarEmAceitar(pacote)
-            Historico.registrar(decisao, tocou)
-        }, config.atrasoMs)
+            MotorDeRegras.deveRecusar(decisao, regras) -> handler.postDelayed({
+                val recusou = tocarEmBotao(pacote) { PadroesAtivos.atual.ehRotuloRecusar(it) }
+                Historico.registrar(decisao, recusou = recusou)
+            }, config.atrasoMs)
+
+            else -> Historico.registrar(decisao)
+        }
     }
 
     override fun onInterrupt() {}
@@ -117,10 +122,10 @@ class AceiteAccessibilityService : AccessibilityService() {
         return saida
     }
 
-    /** Procura o botão Aceitar e clica; se o nó não for clicável, toca no centro dele. */
-    private fun tocarEmAceitar(pacote: String): Boolean {
+    /** Procura o botão cujo texto satisfaz [ehBotao] e clica; se o nó não for clicável, toca no centro dele. */
+    private fun tocarEmBotao(pacote: String, ehBotao: (String) -> Boolean): Boolean {
         for (raiz in raizesDoApp(pacote)) {
-            val alvo = acharAceitar(raiz) ?: continue
+            val alvo = acharBotao(raiz, ehBotao) ?: continue
             var no: AccessibilityNodeInfo? = alvo
             while (no != null) {
                 if (no.isClickable && no.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
@@ -132,11 +137,11 @@ class AceiteAccessibilityService : AccessibilityService() {
         return false
     }
 
-    private fun acharAceitar(no: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+    private fun acharBotao(no: AccessibilityNodeInfo, ehBotao: (String) -> Boolean): AccessibilityNodeInfo? {
         val t = (no.text ?: no.contentDescription)?.toString()
-        if (t != null && PadroesAtivos.atual.ehRotuloAceitar(t)) return no
+        if (t != null && ehBotao(t)) return no
         for (i in 0 until no.childCount) {
-            no.getChild(i)?.let { filho -> acharAceitar(filho)?.let { return it } }
+            no.getChild(i)?.let { filho -> acharBotao(filho, ehBotao)?.let { return it } }
         }
         return null
     }

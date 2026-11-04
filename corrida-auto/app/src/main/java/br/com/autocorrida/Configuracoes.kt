@@ -47,6 +47,8 @@ class Configuracoes(context: Context) {
         ignorarEmCorrida = prefs.getBoolean("ignorarEmCorrida", true),
         aceitarNoFinalDaCorrida = prefs.getBoolean("aceitarNoFinalDaCorrida", true),
         kmFinalParaAceitar = prefs.getNum("kmFinalParaAceitar", 1.0) ?: 1.0,
+        recusarAbaixoPorKm = prefs.getBoolean("recusarAbaixoPorKm", true),
+        recusarOutrosFiltros = prefs.getBoolean("recusarOutrosFiltros", false),
     )
 
     fun salvar(r: Regras) {
@@ -63,6 +65,8 @@ class Configuracoes(context: Context) {
             .putBoolean("ignorarEmCorrida", r.ignorarEmCorrida)
             .putBoolean("aceitarNoFinalDaCorrida", r.aceitarNoFinalDaCorrida)
             .putNum("kmFinalParaAceitar", r.kmFinalParaAceitar)
+            .putBoolean("recusarAbaixoPorKm", r.recusarAbaixoPorKm)
+            .putBoolean("recusarOutrosFiltros", r.recusarOutrosFiltros)
             .apply()
     }
 

@@ -23,7 +23,18 @@ data class Regras(
     val aceitarNoFinalDaCorrida: Boolean = true,
     /** "Pouco" = até este número de km para o destino da viagem atual. */
     val kmFinalParaAceitar: Double = 1.0,
+
+    /** Toca em "Recusar" quando a oferta fica abaixo do R$/km mínimo. */
+    val recusarAbaixoPorKm: Boolean = true,
+    /** Toca em "Recusar" também quando falha em outro filtro (bairro, distância, valor mínimo). */
+    val recusarOutrosFiltros: Boolean = false,
 )
+
+/** Por que uma oferta não foi aceita. */
+enum class Motivo {
+    DESLIGADO, PLATAFORMA, EM_CORRIDA, SEM_CALCULO,
+    POR_KM, VALOR_MINIMO, BUSCA, TOTAL, BAIRRO_BLOQUEADO, BAIRRO_FORA,
+}
 
 sealed class Decisao {
     abstract val oferta: Oferta
@@ -36,16 +47,20 @@ sealed class Decisao {
         val emSequencia: Boolean,
     ) : Decisao()
 
-    data class Recusar(override val oferta: Oferta, val motivos: List<String>) : Decisao()
+    data class Recusar(
+        override val oferta: Oferta,
+        val motivos: List<String>,
+        val tipos: Set<Motivo> = emptySet(),
+    ) : Decisao()
 }
 
 object MotorDeRegras {
 
     fun avaliar(oferta: Oferta, regras: Regras, estado: EstadoAtual = EstadoAtual.LIVRE): Decisao {
-        val motivos = mutableListOf<String>()
+        val motivos = mutableListOf<Pair<Motivo, String>>()
 
-        if (!regras.ativo) motivos += "aceite automático desligado"
-        if (oferta.plataforma !in regras.plataformas) motivos += "plataforma ${oferta.plataforma} desligada"
+        if (!regras.ativo) motivos += Motivo.DESLIGADO to "aceite automático desligado"
+        if (oferta.plataforma !in regras.plataformas) motivos += Motivo.PLATAFORMA to "plataforma ${oferta.plataforma} desligada"
 
         // ---- Corrida em andamento ----
         val finalizando = estado.emCorrida && regras.ignorarEmCorrida && run {
@@ -59,7 +74,7 @@ object MotorDeRegras {
                     else -> "já em corrida (faltam %.1f km, aceita só com até %.1f km)"
                         .format(restante, regras.kmFinalParaAceitar)
                 }
-                return Decisao.Recusar(oferta, listOf(motivo))
+                return Decisao.Recusar(oferta, listOf(motivo), motivos.map { it.first }.toSet() + Motivo.EM_CORRIDA)
             }
             true
         }
@@ -70,19 +85,19 @@ object MotorDeRegras {
         val porKm = oferta.valorPorKm(regras.contarKmBusca, kmBusca)
         regras.minimoPorKm?.let { min ->
             when {
-                porKm == null -> motivos += "não foi possível calcular R$/km"
-                porKm < min -> motivos += "R$ %.2f/km abaixo do mínimo R$ %.2f/km".format(porKm, min)
+                porKm == null -> motivos += Motivo.SEM_CALCULO to "não foi possível calcular R$/km"
+                porKm < min -> motivos += Motivo.POR_KM to "R$ %.2f/km abaixo do mínimo R$ %.2f/km".format(porKm, min)
             }
         }
         regras.valorMinimo?.let { min ->
-            if (oferta.valor < min) motivos += "valor R$ %.2f abaixo do mínimo R$ %.2f".format(oferta.valor, min)
+            if (oferta.valor < min) motivos += Motivo.VALOR_MINIMO to "valor R$ %.2f abaixo do mínimo R$ %.2f".format(oferta.valor, min)
         }
         regras.maxKmBusca?.let { max ->
-            if (kmBusca != null && kmBusca > max) motivos += "busca de %.1f km acima de %.1f km".format(kmBusca, max)
+            if (kmBusca != null && kmBusca > max) motivos += Motivo.BUSCA to "busca de %.1f km acima de %.1f km".format(kmBusca, max)
         }
         regras.maxKmTotal?.let { max ->
             val total = oferta.kmTotal(regras.contarKmBusca, kmBusca)
-            if (total != null && total > max) motivos += "total de %.1f km acima de %.1f km".format(total, max)
+            if (total != null && total > max) motivos += Motivo.TOTAL to "total de %.1f km acima de %.1f km".format(total, max)
         }
 
         // ---- Bairros ----
@@ -92,18 +107,34 @@ object MotorDeRegras {
         regras.bairrosBloqueados.firstOrNull { b ->
             val n = Texto.normalizar(b)
             n.isNotBlank() && (Texto.contemPalavra(destinoNorm, n) || Texto.contemPalavra(origemNorm, n))
-        }?.let { motivos += "bairro bloqueado: $it" }
+        }?.let { motivos += Motivo.BAIRRO_BLOQUEADO to "bairro bloqueado: $it" }
 
         if (regras.bairrosPermitidos.isNotEmpty()) {
             val ok = regras.bairrosPermitidos.any { b ->
                 val n = Texto.normalizar(b)
                 n.isNotBlank() && Texto.contemPalavra(destinoNorm, n)
             }
-            if (!ok) motivos += "destino fora dos bairros permitidos"
+            if (!ok) motivos += Motivo.BAIRRO_FORA to "destino fora dos bairros permitidos"
         }
 
         return if (motivos.isEmpty()) Decisao.Aceitar(oferta, porKm, kmBusca, emSequencia)
-        else Decisao.Recusar(oferta, motivos)
+        else Decisao.Recusar(oferta, motivos.map { it.second }, motivos.map { it.first }.toSet())
+    }
+
+    private val filtrosDeOferta = setOf(Motivo.VALOR_MINIMO, Motivo.BUSCA, Motivo.TOTAL, Motivo.BAIRRO_BLOQUEADO, Motivo.BAIRRO_FORA)
+    private val nuncaRecusar = setOf(Motivo.DESLIGADO, Motivo.PLATAFORMA, Motivo.EM_CORRIDA, Motivo.SEM_CALCULO)
+
+    /**
+     * Se o app deve tocar em "Recusar" para esta decisão.
+     * Nunca recusa com o aceite desligado, em corrida, ou quando não deu para calcular o R$/km
+     * (leitura duvidosa da tela).
+     */
+    fun deveRecusar(decisao: Decisao, regras: Regras): Boolean {
+        if (decisao !is Decisao.Recusar) return false
+        val t = decisao.tipos
+        if (t.isEmpty() || t.any { it in nuncaRecusar }) return false
+        return (regras.recusarAbaixoPorKm && Motivo.POR_KM in t) ||
+            (regras.recusarOutrosFiltros && t.any { it in filtrosDeOferta })
     }
 
     /**

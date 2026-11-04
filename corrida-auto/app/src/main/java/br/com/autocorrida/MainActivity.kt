@@ -118,6 +118,8 @@ class MainActivity : AppCompatActivity() {
         sw(R.id.swIgnorarEmCorrida).isChecked = r.ignorarEmCorrida
         sw(R.id.swAceitarNoFinal).isChecked = r.aceitarNoFinalDaCorrida
         txt(R.id.edKmFinal, r.kmFinalParaAceitar)
+        sw(R.id.swRecusarPorKm).isChecked = r.recusarAbaixoPorKm
+        sw(R.id.swRecusarOutros).isChecked = r.recusarOutrosFiltros
         cb(R.id.cbUber).isChecked = Plataforma.UBER in r.plataformas
         cb(R.id.cb99).isChecked = Plataforma.NOVENTA_E_NOVE in r.plataformas
         cb(R.id.cbInDrive).isChecked = Plataforma.INDRIVE in r.plataformas
@@ -141,6 +143,8 @@ class MainActivity : AppCompatActivity() {
         ignorarEmCorrida = sw(R.id.swIgnorarEmCorrida).isChecked,
         aceitarNoFinalDaCorrida = sw(R.id.swAceitarNoFinal).isChecked,
         kmFinalParaAceitar = num(R.id.edKmFinal) ?: 1.0,
+        recusarAbaixoPorKm = sw(R.id.swRecusarPorKm).isChecked,
+        recusarOutrosFiltros = sw(R.id.swRecusarOutros).isChecked,
     )
 
     private fun sw(id: Int) = findViewById<CompoundButton>(id)

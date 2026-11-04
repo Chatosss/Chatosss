@@ -18,6 +18,10 @@ data class Padroes(
     val rotulosAceitar: List<String> = listOf(
         "aceitar", "aceitar corrida", "aceitar viagem", "toque para aceitar", "accept", "aceitar por",
     ),
+    /** Rótulos do botão que recusa a corrida. */
+    val rotulosRecusar: List<String> = listOf(
+        "recusar", "rejeitar", "ignorar", "dispensar", "nao aceitar", "pular", "decline", "reject",
+    ),
     val marcadoresViagem: List<String> = listOf(
         "finalizar viagem", "encerrar viagem", "concluir viagem", "finalizar corrida",
         "encerrar corrida", "concluir corrida", "deixar passageiro", "deslize para finalizar",
@@ -43,11 +47,17 @@ data class Padroes(
         return rotulosAceitar.any { t == it || t.startsWith("$it ") }
     }
 
+    /** true se [texto] (de um botão na tela) for um dos rótulos de recusar. */
+    fun ehRotuloRecusar(texto: String): Boolean {
+        val t = Texto.normalizar(texto)
+        return rotulosRecusar.any { t == it || t.startsWith("$it ") }
+    }
+
     /** Cópia com todos os textos normalizados (sem acento, minúsculos). */
     fun normalizado(): Padroes {
         fun List<String>.n() = map(Texto::normalizar).filter { it.isNotEmpty() }.distinct()
         return copy(
-            gatilhosOferta = gatilhosOferta.n(), sequencia = sequencia.n(), rotulosAceitar = rotulosAceitar.n(),
+            gatilhosOferta = gatilhosOferta.n(), sequencia = sequencia.n(), rotulosAceitar = rotulosAceitar.n(), rotulosRecusar = rotulosRecusar.n(),
             marcadoresViagem = marcadoresViagem.n(), marcadoresBusca = marcadoresBusca.n(),
             marcadoresLivre = marcadoresLivre.n(), palavrasManobra = palavrasManobra.n(),
         )

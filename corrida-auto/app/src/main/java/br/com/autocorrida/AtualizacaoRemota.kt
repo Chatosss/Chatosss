@@ -55,6 +55,7 @@ object AtualizacaoRemota {
             gatilhosOferta = lista("gatilhosOferta", p.gatilhosOferta),
             sequencia = lista("sequencia", p.sequencia),
             rotulosAceitar = lista("rotulosAceitar", p.rotulosAceitar),
+            rotulosRecusar = lista("rotulosRecusar", p.rotulosRecusar),
             marcadoresViagem = lista("marcadoresViagem", p.marcadoresViagem),
             marcadoresBusca = lista("marcadoresBusca", p.marcadoresBusca),
             marcadoresLivre = lista("marcadoresLivre", p.marcadoresLivre),

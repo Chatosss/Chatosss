@@ -47,7 +47,7 @@ object LeitorDeOferta {
         val iUltima = distancias.last().first
         val ehRuido: (String) -> Boolean = { l ->
             val n = Texto.normalizar(l)
-            gatilhos.any { it in n } || regexValor.containsMatchIn(l)
+            gatilhos.any { it in n } || padroes.ehRotuloRecusar(l) || regexValor.containsMatchIn(l)
         }
         val origem = if (distancias.size > 1) {
             linhas.subList(iPrimeira + 1, iUltima).filterNot(ehRuido).joinToString(" | ")

@@ -12,8 +12,21 @@ O app lê a oferta que aparece na tela e **toca em "Aceitar" sozinho** quando a 
 | Valor mínimo, máx. km de busca, máx. km total | desligados |
 | **Bairros de destino aceitos** (vazio = todos) | — |
 | Bairros bloqueados (origem ou destino) | — |
+| **Recusar automaticamente abaixo do R$/km mínimo** | ligado |
+| Recusar também por bairro, distância ou valor mínimo | desligado |
 | **Ignorar ofertas quando já estou em corrida** | ligado |
 | **Exceto se faltar ≤ X km para terminar a corrida atual** | ligado, 1 km |
+
+### Recusa automática
+
+Ofertas abaixo do R$/km mínimo são recusadas sozinhas: o app toca em "Recusar" (ou "Rejeitar",
+"Ignorar"… a lista fica em `rotulosRecusar` no `padroes-remotos.json`). Por segurança ele **não** recusa:
+
+- com o aceite automático desligado (bolinha em OFF);
+- durante uma corrida (aí só ignora), exceto no trecho final em que ele aceitaria;
+- quando não conseguiu ler o km da oferta (para não recusar uma corrida boa por erro de leitura).
+
+No histórico: ✅ aceita, 🚫 recusada automaticamente, ❌ só ignorada.
 
 ### Bolinha flutuante
 
