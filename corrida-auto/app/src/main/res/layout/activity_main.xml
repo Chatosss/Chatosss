@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnAcessibilidade"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ativar serviço de acessibilidade" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swAtivo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Aceite automático ligado" />
+
+        <TextView style="@style/Rotulo" android:text="Mínimo R$ por km" />
+        <EditText android:id="@+id/edMinKm" style="@style/Numero" android:hint="1,50" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swContarBusca"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Contar km até o passageiro no R$/km" />
+
+        <TextView style="@style/Rotulo" android:text="Valor mínimo da corrida (R$, vazio = sem limite)" />
+        <EditText android:id="@+id/edValorMin" style="@style/Numero" />
+
+        <TextView style="@style/Rotulo" android:text="Máx. km até o passageiro (vazio = sem limite)" />
+        <EditText android:id="@+id/edMaxBusca" style="@style/Numero" />
+
+        <TextView style="@style/Rotulo" android:text="Máx. km total (vazio = sem limite)" />
+        <EditText android:id="@+id/edMaxTotal" style="@style/Numero" />
+
+        <TextView style="@style/Rotulo" android:text="Bairros de destino aceitos (um por linha, vazio = todos)" />
+        <EditText
+            android:id="@+id/edPermitidos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:inputType="textMultiLine|textCapWords"
+            android:minLines="3" />
+
+        <TextView style="@style/Rotulo" android:text="Bairros bloqueados (origem ou destino)" />
+        <EditText
+            android:id="@+id/edBloqueados"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:inputType="textMultiLine|textCapWords"
+            android:minLines="2" />
+
+        <TextView style="@style/Titulo" android:text="Quando já estou em corrida" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swIgnorarEmCorrida"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ignorar ofertas durante uma corrida" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swAceitarNoFinal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Exceto quando estiver terminando a corrida" />
+
+        <TextView style="@style/Rotulo" android:text="Considerar 'terminando' quando faltar até (km)" />
+        <EditText android:id="@+id/edKmFinal" style="@style/Numero" android:hint="1,0" />
+
+        <TextView style="@style/Titulo" android:text="Plataformas" />
+        <CheckBox android:id="@+id/cbUber" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Uber" />
+        <CheckBox android:id="@+id/cb99" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="99" />
+        <CheckBox android:id="@+id/cbInDrive" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="inDrive" />
+
+        <TextView style="@style/Rotulo" android:text="Esperar antes de tocar em Aceitar (ms)" />
+        <EditText android:id="@+id/edAtraso" style="@style/Numero" android:hint="600" />
+
+        <Button
+            android:id="@+id/btnSalvar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salvar" />
+
+        <TextView style="@style/Titulo" android:text="Últimas decisões" />
+        <TextView
+            android:id="@+id/txtHistorico"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textIsSelectable="true"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>

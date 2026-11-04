@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Corrida Auto</string>
+    <string name="servico_nome">Corrida Auto – aceite automático</string>
+    <string name="servico_descricao">Lê as ofertas de corrida do Uber, 99 e inDrive e toca em Aceitar quando a oferta passa nos seus filtros (R$/km, bairros, distância). Também detecta quando você já está em uma corrida.</string>
+</resources>
