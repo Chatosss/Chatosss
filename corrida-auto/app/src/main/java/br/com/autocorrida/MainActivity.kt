@@ -31,6 +31,10 @@ class MainActivity : AppCompatActivity() {
         preencher(config.carregar())
         AtualizacaoRemota.carregarCache(this)
 
+        // Estes dois valem na hora (a bolinha acompanha), sem precisar tocar em Salvar
+        sw(R.id.swAtivo).setOnCheckedChangeListener { _, v -> if (config.ativo != v) config.ativo = v }
+        sw(R.id.swBolinha).setOnCheckedChangeListener { _, v -> if (config.mostrarBolinha != v) config.mostrarBolinha = v }
+
         findViewById<Button>(R.id.btnAtualizar).setOnClickListener {
             AtualizacaoRemota.verificar(this, forcar = true) { msg ->
                 runOnUiThread {
@@ -48,6 +52,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnSalvar).setOnClickListener {
             config.salvar(lerTela())
             config.atrasoMs = num(R.id.edAtraso)?.toLong() ?: 600L
+            config.mostrarBolinha = sw(R.id.swBolinha).isChecked
             Toast.makeText(this, "Salvo", Toast.LENGTH_SHORT).show()
         }
     }
@@ -55,6 +60,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Historico.aoMudar = { runOnUiThread { atualizarStatus() } }
+        // A bolinha pode ter ligado/desligado o aceite enquanto o app estava fechado
+        sw(R.id.swAtivo).isChecked = config.ativo
         atualizarStatus()
     }
 
@@ -100,6 +107,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun preencher(r: Regras) {
         sw(R.id.swAtivo).isChecked = r.ativo
+        sw(R.id.swBolinha).isChecked = config.mostrarBolinha
         txt(R.id.edMinKm, r.minimoPorKm)
         sw(R.id.swContarBusca).isChecked = r.contarKmBusca
         txt(R.id.edValorMin, r.valorMinimo)

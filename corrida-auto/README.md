@@ -15,6 +15,18 @@ O app lê a oferta que aparece na tela e **toca em "Aceitar" sozinho** quando a 
 | **Ignorar ofertas quando já estou em corrida** | ligado |
 | **Exceto se faltar ≤ X km para terminar a corrida atual** | ligado, 1 km |
 
+### Bolinha flutuante
+
+Com o serviço de acessibilidade ativo, aparece uma bolinha por cima dos apps (inclusive do Uber/99):
+
+- **Toque**: liga/desliga o aceite automático. Verde "ON" = ligado, cinza "OFF" = desligado.
+- **Arrastar**: move a bolinha; ela gruda na borda mais próxima e a posição fica salva.
+- **Segurar**: abre o Corrida Auto.
+- **Anel azul**: você está em corrida.
+
+Ela pode ser escondida na tela do app ("Mostrar bolinha flutuante"). Não precisa da permissão
+"sobrepor a outros apps": é desenhada pelo próprio serviço de acessibilidade.
+
 ### Corrida em andamento
 
 O app acompanha a tela do app do motorista e sabe em que fase você está:

@@ -31,8 +31,34 @@ class AceiteAccessibilityService : AccessibilityService() {
     private var ultimaAssinatura: String? = null
     private var ultimaAssinaturaEm = 0L
 
+    private var bolinha: BolinhaFlutuante? = null
+
+    /** Reage às mudanças de configuração (feitas pela bolinha ou pela tela do app). */
+    private val aoMudarConfig = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, chave ->
+        handler.post {
+            when (chave) {
+                "ativo" -> bolinha?.atualizar()
+                "mostrarBolinha" -> aplicarBolinha()
+            }
+        }
+    }
+
+    private fun aplicarBolinha() {
+        val b = bolinha ?: BolinhaFlutuante(this, config).also { bolinha = it }
+        if (config.mostrarBolinha) b.mostrar() else b.esconder()
+    }
+
+    override fun onDestroy() {
+        if (::config.isInitialized) config.pararDeObservar(aoMudarConfig)
+        bolinha?.esconder()
+        bolinha = null
+        super.onDestroy()
+    }
+
     override fun onServiceConnected() {
         config = Configuracoes(this)
+        config.observar(aoMudarConfig)
+        aplicarBolinha()
         AtualizacaoRemota.carregarCache(this)
         AtualizacaoRemota.verificar(this, forcar = true)
     }
@@ -50,8 +76,10 @@ class AceiteAccessibilityService : AccessibilityService() {
         val oferta = LeitorDeOferta.ler(textos, plataforma)
         if (oferta == null) {
             LeitorDeEstado.ler(textos)?.let {
+                val estavaEmCorrida = Historico.estado.emCorrida
                 rastreador.atualizar(it)
                 Historico.estado = rastreador.estado
+                if (estavaEmCorrida != rastreador.estado.emCorrida) bolinha?.atualizar()
                 Historico.aoMudar?.invoke()
             }
             return

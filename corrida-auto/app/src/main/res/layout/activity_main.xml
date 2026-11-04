@@ -57,6 +57,12 @@
             android:layout_height="wrap_content"
             android:text="Aceite automático ligado" />
 
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/swBolinha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Mostrar bolinha flutuante (toque liga/desliga, segure abre o app)" />
+
         <TextView style="@style/Rotulo" android:text="Mínimo R$ por km" />
         <EditText android:id="@+id/edMinKm" style="@style/Numero" android:hint="1,50" />
 
