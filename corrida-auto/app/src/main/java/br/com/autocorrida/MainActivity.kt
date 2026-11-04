@@ -3,6 +3,7 @@ package br.com.autocorrida
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.CompoundButton
@@ -10,6 +11,9 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import br.com.autocorrida.core.Fase
 import br.com.autocorrida.core.Plataforma
 import br.com.autocorrida.core.Regras
@@ -21,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.toolbar))
+        ajustarBordas()
         config = Configuracoes(this)
         preencher(config.carregar())
         AtualizacaoRemota.carregarCache(this)
@@ -55,6 +61,28 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         Historico.aoMudar = null
+    }
+
+    /**
+     * No Android 15+ o app desenha de ponta a ponta. Reserva espaço para a barra de status
+     * (em cima), a barra de navegação (embaixo) e o teclado, para nada ficar por baixo delas.
+     */
+    private fun ajustarBordas() {
+        val toolbar = findViewById<View>(R.id.toolbar)
+        val rolagem = findViewById<View>(R.id.rolagem)
+        val alturaToolbar = toolbar.layoutParams.height
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.raiz)) { _, insets ->
+            val barras = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val teclado = insets.getInsets(WindowInsetsCompat.Type.ime())
+            toolbar.updatePadding(top = barras.top, left = barras.left, right = barras.right)
+            toolbar.layoutParams = toolbar.layoutParams.apply { height = alturaToolbar + barras.top }
+            rolagem.updatePadding(
+                left = barras.left,
+                right = barras.right,
+                bottom = maxOf(barras.bottom, teclado.bottom),
+            )
+            WindowInsetsCompat.CONSUMED
+        }
     }
 
     private fun atualizarStatus() {
