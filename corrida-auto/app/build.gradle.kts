@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -35,7 +37,7 @@ android {
             create("fixa") {
                 val f = layout.buildDirectory.file("assinatura.jks").get().asFile
                 f.parentFile.mkdirs()
-                f.writeBytes(java.util.Base64.getMimeDecoder().decode(jksBase64))
+                f.writeBytes(Base64.getMimeDecoder().decode(jksBase64))
                 storeFile = f
                 storePassword = System.getenv("ASSINATURA_SENHA")
                 keyAlias = System.getenv("ASSINATURA_ALIAS")
