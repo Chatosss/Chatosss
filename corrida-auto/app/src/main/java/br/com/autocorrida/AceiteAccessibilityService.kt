@@ -6,13 +6,17 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import br.com.autocorrida.core.Decisao
 import br.com.autocorrida.core.EstadoAtual
 import br.com.autocorrida.core.LeitorDeEstado
 import br.com.autocorrida.core.LeitorDeOferta
+import br.com.autocorrida.core.Limites
+import br.com.autocorrida.core.LocalizadorDeRecusa
 import br.com.autocorrida.core.MotorDeRegras
+import br.com.autocorrida.core.NoDaTela
 import br.com.autocorrida.core.PadroesAtivos
 import br.com.autocorrida.core.Plataforma
 import br.com.autocorrida.core.RastreadorDeCorrida
@@ -23,6 +27,10 @@ import br.com.autocorrida.core.RastreadorDeCorrida
  *  2. Se não for oferta: atualiza o estado (livre / indo buscar / em viagem + km restante).
  */
 class AceiteAccessibilityService : AccessibilityService() {
+
+    private companion object {
+        const val TAG = "CorridaAuto"
+    }
 
     private val handler = Handler(Looper.getMainLooper())
     /** Um rastreador por app: estar livre no Uber não apaga a corrida em andamento na 99. */
@@ -66,6 +74,7 @@ class AceiteAccessibilityService : AccessibilityService() {
     }
 
     override fun onServiceConnected() {
+        Log.i(TAG, "serviço conectado, versão ${BuildConfig.VERSION_NAME}")
         config = Configuracoes(this)
         config.observar(aoMudarConfig)
         aplicarBolinha()
@@ -93,7 +102,10 @@ class AceiteAccessibilityService : AccessibilityService() {
      */
     private fun processarJanelas() {
         AtualizacaoRemota.verificar(this) // no máximo a cada 5 min; roda em segundo plano
-        val lista = runCatching { windows }.getOrNull().orEmpty()
+        val lista = runCatching { windows }
+            .onFailure { Log.e(TAG, "falha ao listar janelas", it) }
+            .getOrNull().orEmpty()
+        logarJanelas(lista)
         Diagnostico.registrarJanelas {
             lista.joinToString("\n") { w ->
                 val r = Rect().also(w::getBoundsInScreen)
@@ -112,6 +124,7 @@ class AceiteAccessibilityService : AccessibilityService() {
         val textos = nos.mapNotNull { it.texto ?: it.descricao }
 
         val oferta = LeitorDeOferta.ler(textos, plataforma)
+        logarLeitura(pacote, raizes.size, nos.size, textos, oferta != null)
         if (oferta == null) {
             val leitura = LeitorDeEstado.ler(textos)
             Diagnostico.registrarTela(pacote, nos, "estado lido: ${leitura?.fase ?: "nenhum"} km restante: ${leitura?.kmRestante}")
@@ -133,6 +146,7 @@ class AceiteAccessibilityService : AccessibilityService() {
 
         val regras = config.carregar()
         val decisao = MotorDeRegras.avaliar(oferta, regras, estadoParaDecisao())
+        Log.i(TAG, "oferta valor=${oferta.valor} busca=${oferta.kmBusca} viagem=${oferta.kmViagem} decisao=${decisao::class.simpleName} recusar=${MotorDeRegras.deveRecusar(decisao, regras)}")
         Diagnostico.registrarOferta(
             pacote, nos,
             "valor=${oferta.valor} busca=${oferta.kmBusca} viagem=${oferta.kmViagem} " +
@@ -153,6 +167,27 @@ class AceiteAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
+    // ---- Logs para depuração por adb: `adb logcat -s CorridaAuto`. Só registram quando algo muda. ----
+    private var ultimasJanelas: String? = null
+    private val ultimaLeitura = mutableMapOf<String, String>()
+
+    private fun logarJanelas(lista: List<android.view.accessibility.AccessibilityWindowInfo>) {
+        val resumo = lista.joinToString(" | ") { w ->
+            "${w.root?.packageName ?: "sem-raiz"} tipo=${w.type} ativa=${w.isActive}"
+        }
+        if (resumo != ultimasJanelas) {
+            ultimasJanelas = resumo
+            Log.i(TAG, "janelas(${lista.size}): $resumo")
+        }
+    }
+
+    private fun logarLeitura(pacote: String, raizes: Int, nos: Int, textos: List<String>, ehOferta: Boolean) {
+        val conteudo = textos.joinToString(" ¦ ")
+        if (ultimaLeitura[pacote] == conteudo) return
+        ultimaLeitura[pacote] = conteudo
+        Log.i(TAG, "leitura $pacote raizes=$raizes nos=$nos oferta=$ehOferta: ${conteudo.take(1500)}")
+    }
+
     /** Executa [acao] após o atraso configurado; se não achar o botão, tenta mais 3 vezes (a tela pode estar montando). */
     private class Tentativa { var aoTerminar: ((Boolean) -> Unit)? = null }
 
@@ -165,6 +200,7 @@ class AceiteAccessibilityService : AccessibilityService() {
             val como = acao()
             if (como != null || restantes <= 0) {
                 Diagnostico.ultimaAcao = if (como != null) "$nome: tocou ($como)" else "$nome: botão não encontrado em $pacote"
+                Log.i(TAG, Diagnostico.ultimaAcao)
                 t.aoTerminar?.invoke(como != null)
             } else {
                 handler.postDelayed(passo, 400)
@@ -213,35 +249,14 @@ class AceiteAccessibilityService : AccessibilityService() {
      *  3. botão pequeno, sem texto, no canto de cima da oferta, na altura do valor (o "X" da 99/Uber)
      */
     private fun tocarRecusar(pacote: String): String? {
-        val p = PadroesAtivos.atual
         val nos = nosAtuais(pacote)
-
-        nos.firstOrNull { n -> listOfNotNull(n.texto, n.descricao).any { p.ehRotuloRecusar(it) } }
-            ?.let { if (clicar(it)) return "texto \"${it.texto ?: it.descricao}\"" }
-
-        nos.firstOrNull { n ->
-            listOfNotNull(n.texto, n.descricao).any { p.ehRotuloFechar(it) } || (n.id != null && p.ehIdFechar(n.id))
-        }?.let { if (clicar(it)) return "fechar \"${it.descricao ?: it.texto ?: it.id}\"" }
-
-        acharXPelaPosicao(nos)?.let { if (clicar(it)) return "X pela posição @${it.limites.toShortString()}" }
-        return null
-    }
-
-    /** O "X" fica no canto superior direito do cartão da oferta, na faixa acima/ao lado do valor. */
-    private fun acharXPelaPosicao(nos: List<No>): No? {
         val tela = resources.displayMetrics
-        val valor = nos.firstOrNull { n ->
-            val t = n.texto ?: n.descricao ?: return@firstOrNull false
-            t.contains("R$") && !t.contains("/km") && !t.contains("/min") && !n.limites.isEmpty
-        } ?: return null
-        val alturaMax = tela.heightPixels * 0.12f
-        return nos.filter { n ->
+        val noDaTela = nos.map { n ->
             val r = n.limites
-            n.clicavel && n.texto == null && !r.isEmpty &&
-                r.width() < tela.widthPixels * 0.3f && r.height() < tela.heightPixels * 0.12f &&
-                r.centerX() > tela.widthPixels * 0.6f &&
-                r.centerY() < valor.limites.bottom && r.centerY() > valor.limites.top - alturaMax
-        }.maxWithOrNull(compareBy<No> { it.limites.centerX() }.thenBy { -it.limites.centerY() })
+            NoDaTela(n.texto, n.descricao, n.id, n.clicavel, Limites(r.left, r.top, r.right, r.bottom))
+        }
+        val alvo = LocalizadorDeRecusa.localizar(noDaTela, tela.widthPixels, tela.heightPixels) ?: return null
+        return if (clicar(nos[alvo.indice])) alvo.como else null
     }
 
     /** Clica no nó (ou no primeiro pai clicável); se não der, toca no centro dele. */
