@@ -71,3 +71,48 @@ class RecusaAutomaticaTest {
         assertEquals("Bairro B", o.destino)
     }
 }
+
+class Tela99Test {
+    /** Textos do pop-up da 99 Moto (print real do usuário). */
+    private val tela99 = listOf(
+        "Moto", "Exclusivo", "R$ 6,05", "Est. de R$1,16/km", "4,94 (951)", "Verificado",
+        "3 min (0.7 km)", "Rua Santo Andre, Canafístula, Arapiraca",
+        "11 minutos (4.5 km)", "Rua Santo Expedito, 167, Verdes Campos, Arapiraca", "Aceitar",
+    )
+
+    @Test
+    fun `le o pop-up da 99`() {
+        val o = assertNotNull(LeitorDeOferta.ler(tela99, Plataforma.NOVENTA_E_NOVE))
+        assertEquals(6.05, o.valor, 0.001)
+        assertEquals(0.7, o.kmBusca!!, 0.001)
+        assertEquals(4.5, o.kmViagem!!, 0.001)
+        assertTrue("Canafístula" in o.origem)
+        assertTrue("Verdes Campos" in o.destino)
+    }
+
+    @Test
+    fun `oferta da 99 a 1,16 por km deve ser recusada`() {
+        val r = Regras(minimoPorKm = 1.5)
+        val o = LeitorDeOferta.ler(tela99, Plataforma.NOVENTA_E_NOVE)!!
+        val d = MotorDeRegras.avaliar(o, r)
+        assertIs<Decisao.Recusar>(d)
+        assertTrue(MotorDeRegras.deveRecusar(d, r))
+    }
+
+    @Test
+    fun `valor em nos separados`() {
+        val o = assertNotNull(LeitorDeOferta.ler(listOf("R$", "6,05", "1 km", "A", "4 km", "B", "Aceitar"), Plataforma.UBER))
+        assertEquals(6.05, o.valor, 0.001)
+    }
+
+    @Test
+    fun `botao X de fechar`() {
+        val p = PadroesAtivos.atual
+        assertTrue(p.ehRotuloFechar("Fechar"))
+        assertTrue(p.ehRotuloFechar("X"))
+        assertTrue(p.ehRotuloFechar("close"))
+        assertFalse(p.ehRotuloFechar("Xangai"))
+        assertTrue(p.ehIdFechar("com.app99.driver:id/iv_close"))
+        assertFalse(p.ehIdFechar("com.app99.driver:id/btn_accept"))
+    }
+}

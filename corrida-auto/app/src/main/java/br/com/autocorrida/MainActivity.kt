@@ -46,6 +46,12 @@ class MainActivity : AppCompatActivity() {
         }
         Atualizador.verificar(this)
 
+        findViewById<Button>(R.id.btnDiagnostico).setOnClickListener {
+            val cm = getSystemService(android.content.ClipboardManager::class.java)
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("Diagnóstico Corrida Auto", Diagnostico.texto()))
+            Toast.makeText(this, "Diagnóstico copiado. Cole na conversa para ajustarmos.", Toast.LENGTH_LONG).show()
+        }
+
         findViewById<Button>(R.id.btnAcessibilidade).setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }

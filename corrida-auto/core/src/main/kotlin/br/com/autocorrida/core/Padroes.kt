@@ -22,6 +22,10 @@ data class Padroes(
     val rotulosRecusar: List<String> = listOf(
         "recusar", "rejeitar", "ignorar", "dispensar", "nao aceitar", "pular", "decline", "reject",
     ),
+    /** Descrição/texto do botão "X" que fecha (recusa) a oferta. */
+    val rotulosFechar: List<String> = listOf("fechar", "close", "x", "×", "✕", "✖", "dispensar", "recusar oferta"),
+    /** Pedaços do id interno (resource-id) de botões de fechar/recusar. */
+    val idsFechar: List<String> = listOf("close", "fechar", "dismiss", "reject", "refuse", "decline", "recusar", "ignore", "skip", "cancel_order"),
     val marcadoresViagem: List<String> = listOf(
         "finalizar viagem", "encerrar viagem", "concluir viagem", "finalizar corrida",
         "encerrar corrida", "concluir corrida", "deixar passageiro", "deslize para finalizar",
@@ -53,11 +57,23 @@ data class Padroes(
         return rotulosRecusar.any { t == it || t.startsWith("$it ") }
     }
 
+    /** true se o texto/descrição for de um botão "X" de fechar a oferta. */
+    fun ehRotuloFechar(texto: String): Boolean {
+        val t = Texto.normalizar(texto)
+        return t in rotulosFechar || rotulosFechar.any { it.length > 2 && t.startsWith("$it ") }
+    }
+
+    /** true se o resource-id do botão indicar fechar/recusar. */
+    fun ehIdFechar(id: String): Boolean {
+        val n = id.substringAfter(":id/").lowercase()
+        return idsFechar.any { it in n }
+    }
+
     /** Cópia com todos os textos normalizados (sem acento, minúsculos). */
     fun normalizado(): Padroes {
         fun List<String>.n() = map(Texto::normalizar).filter { it.isNotEmpty() }.distinct()
         return copy(
-            gatilhosOferta = gatilhosOferta.n(), sequencia = sequencia.n(), rotulosAceitar = rotulosAceitar.n(), rotulosRecusar = rotulosRecusar.n(),
+            gatilhosOferta = gatilhosOferta.n(), sequencia = sequencia.n(), rotulosAceitar = rotulosAceitar.n(), rotulosRecusar = rotulosRecusar.n(), rotulosFechar = rotulosFechar.n(), idsFechar = idsFechar.map { it.lowercase() },
             marcadoresViagem = marcadoresViagem.n(), marcadoresBusca = marcadoresBusca.n(),
             marcadoresLivre = marcadoresLivre.n(), palavrasManobra = palavrasManobra.n(),
         )

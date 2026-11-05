@@ -27,8 +27,8 @@ object LeitorDeOferta {
         val tudoNorm = Texto.normalizar(tudo)
         if (gatilhos.none { it in tudoNorm }) return null
 
-        val valor = linhas.asSequence()
-            .flatMap { regexValor.findAll(it) }
+        // Procura no texto todo (não linha a linha): alguns apps mostram "R$" e "6,05" em nós separados
+        val valor = regexValor.findAll(tudo)
             .firstOrNull { it.groups[1] == null && it.groups[3] == null }
             ?.let { Texto.numeroBr(it.groupValues[2]) }
             ?: return null

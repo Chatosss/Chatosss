@@ -71,11 +71,14 @@ class AceiteAccessibilityService : AccessibilityService() {
 
         val raizes = raizesDoApp(pacote)
         if (raizes.isEmpty()) return
-        val textos = raizes.flatMap { coletarTextos(it) }
+        val nos = raizes.flatMap { coletarNos(it) }
+        val textos = nos.mapNotNull { it.texto ?: it.descricao }
 
         val oferta = LeitorDeOferta.ler(textos, plataforma)
         if (oferta == null) {
-            LeitorDeEstado.ler(textos)?.let {
+            val leitura = LeitorDeEstado.ler(textos)
+            Diagnostico.registrarTela(pacote, nos, "estado lido: ${leitura?.fase ?: "nenhum"} km restante: ${leitura?.kmRestante}")
+            leitura?.let {
                 val estavaEmCorrida = Historico.estado.emCorrida
                 rastreador.atualizar(it)
                 Historico.estado = rastreador.estado
@@ -93,16 +96,19 @@ class AceiteAccessibilityService : AccessibilityService() {
 
         val regras = config.carregar()
         val decisao = MotorDeRegras.avaliar(oferta, regras, rastreador.estadoParaDecisao())
+        Diagnostico.registrarOferta(
+            pacote, nos,
+            "valor=${oferta.valor} busca=${oferta.kmBusca} viagem=${oferta.kmViagem} " +
+                "origem=\"${oferta.origem}\" destino=\"${oferta.destino}\" decisão=$decisao",
+        )
         when {
-            decisao is Decisao.Aceitar -> handler.postDelayed({
-                val tocou = tocarEmBotao(pacote) { PadroesAtivos.atual.ehRotuloAceitar(it) }
-                Historico.registrar(decisao, tocou = tocou)
-            }, config.atrasoMs)
+            decisao is Decisao.Aceitar -> tentar(pacote, "aceitar") { tocarAceitar(pacote) }.also { r ->
+                r.aoTerminar = { ok -> Historico.registrar(decisao, tocou = ok) }
+            }
 
-            MotorDeRegras.deveRecusar(decisao, regras) -> handler.postDelayed({
-                val recusou = tocarEmBotao(pacote) { PadroesAtivos.atual.ehRotuloRecusar(it) }
-                Historico.registrar(decisao, recusou = recusou)
-            }, config.atrasoMs)
+            MotorDeRegras.deveRecusar(decisao, regras) -> tentar(pacote, "recusar") { tocarRecusar(pacote) }.also { r ->
+                r.aoTerminar = { ok -> Historico.registrar(decisao, recusou = ok) }
+            }
 
             else -> Historico.registrar(decisao)
         }
@@ -110,40 +116,105 @@ class AceiteAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
+    /** Executa [acao] após o atraso configurado; se não achar o botão, tenta mais 3 vezes (a tela pode estar montando). */
+    private class Tentativa { var aoTerminar: ((Boolean) -> Unit)? = null }
+
+    private fun tentar(pacote: String, nome: String, acao: () -> String?): Tentativa {
+        val t = Tentativa()
+        var restantes = 4
+        lateinit var passo: Runnable
+        passo = Runnable {
+            restantes--
+            val como = acao()
+            if (como != null || restantes <= 0) {
+                Diagnostico.ultimaAcao = if (como != null) "$nome: tocou ($como)" else "$nome: botão não encontrado em $pacote"
+                t.aoTerminar?.invoke(como != null)
+            } else {
+                handler.postDelayed(passo, 400)
+            }
+        }
+        handler.postDelayed(passo, config.atrasoMs)
+        return t
+    }
+
     private fun raizesDoApp(pacote: String): List<AccessibilityNodeInfo> {
         val porJanela = windows.mapNotNull { it.root }.filter { it.packageName?.toString() == pacote }
         return porJanela.ifEmpty { listOfNotNull(rootInActiveWindow) }
     }
 
-    private fun coletarTextos(no: AccessibilityNodeInfo, saida: MutableList<String> = mutableListOf()): List<String> {
-        no.text?.toString()?.takeIf { it.isNotBlank() }?.let(saida::add)
-        if (no.text.isNullOrBlank()) no.contentDescription?.toString()?.takeIf { it.isNotBlank() }?.let(saida::add)
-        for (i in 0 until no.childCount) no.getChild(i)?.let { coletarTextos(it, saida) }
+    private fun coletarNos(no: AccessibilityNodeInfo, saida: MutableList<No> = mutableListOf()): List<No> {
+        if (saida.size > 600) return saida
+        val r = Rect().also(no::getBoundsInScreen)
+        saida += No(
+            info = no,
+            texto = no.text?.toString()?.takeIf { it.isNotBlank() },
+            descricao = no.contentDescription?.toString()?.takeIf { it.isNotBlank() },
+            id = no.viewIdResourceName,
+            classe = no.className?.toString()?.substringAfterLast('.') ?: "?",
+            clicavel = no.isClickable,
+            limites = r,
+        )
+        for (i in 0 until no.childCount) no.getChild(i)?.let { coletarNos(it, saida) }
         return saida
     }
 
-    /** Procura o botão cujo texto satisfaz [ehBotao] e clica; se o nó não for clicável, toca no centro dele. */
-    private fun tocarEmBotao(pacote: String, ehBotao: (String) -> Boolean): Boolean {
-        for (raiz in raizesDoApp(pacote)) {
-            val alvo = acharBotao(raiz, ehBotao) ?: continue
-            var no: AccessibilityNodeInfo? = alvo
-            while (no != null) {
-                if (no.isClickable && no.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
-                no = no.parent
-            }
-            val r = Rect().also(alvo::getBoundsInScreen)
-            if (!r.isEmpty) return tocar(r.exactCenterX(), r.exactCenterY())
-        }
-        return false
+    private fun nosAtuais(pacote: String) = raizesDoApp(pacote).flatMap { coletarNos(it) }
+
+    /** Toca no botão Aceitar. Retorna como achou o botão, ou null. */
+    private fun tocarAceitar(pacote: String): String? {
+        val alvo = nosAtuais(pacote).firstOrNull { n ->
+            listOfNotNull(n.texto, n.descricao).any { PadroesAtivos.atual.ehRotuloAceitar(it) }
+        } ?: return null
+        return if (clicar(alvo)) "texto \"${alvo.texto ?: alvo.descricao}\"" else null
     }
 
-    private fun acharBotao(no: AccessibilityNodeInfo, ehBotao: (String) -> Boolean): AccessibilityNodeInfo? {
-        val t = (no.text ?: no.contentDescription)?.toString()
-        if (t != null && ehBotao(t)) return no
-        for (i in 0 until no.childCount) {
-            no.getChild(i)?.let { filho -> acharBotao(filho, ehBotao)?.let { return it } }
-        }
+    /**
+     * Toca no botão de recusar. Ordem de busca:
+     *  1. botão com texto "Recusar", "Rejeitar"…
+     *  2. botão "X" identificado pela descrição ("Fechar", "close") ou pelo id (…close…)
+     *  3. botão pequeno, sem texto, no canto de cima da oferta, na altura do valor (o "X" da 99/Uber)
+     */
+    private fun tocarRecusar(pacote: String): String? {
+        val p = PadroesAtivos.atual
+        val nos = nosAtuais(pacote)
+
+        nos.firstOrNull { n -> listOfNotNull(n.texto, n.descricao).any { p.ehRotuloRecusar(it) } }
+            ?.let { if (clicar(it)) return "texto \"${it.texto ?: it.descricao}\"" }
+
+        nos.firstOrNull { n ->
+            listOfNotNull(n.texto, n.descricao).any { p.ehRotuloFechar(it) } || (n.id != null && p.ehIdFechar(n.id))
+        }?.let { if (clicar(it)) return "fechar \"${it.descricao ?: it.texto ?: it.id}\"" }
+
+        acharXPelaPosicao(nos)?.let { if (clicar(it)) return "X pela posição @${it.limites.toShortString()}" }
         return null
+    }
+
+    /** O "X" fica no canto superior direito do cartão da oferta, na faixa acima/ao lado do valor. */
+    private fun acharXPelaPosicao(nos: List<No>): No? {
+        val tela = resources.displayMetrics
+        val valor = nos.firstOrNull { n ->
+            val t = n.texto ?: n.descricao ?: return@firstOrNull false
+            t.contains("R$") && !t.contains("/km") && !t.contains("/min") && !n.limites.isEmpty
+        } ?: return null
+        val alturaMax = tela.heightPixels * 0.12f
+        return nos.filter { n ->
+            val r = n.limites
+            n.clicavel && n.texto == null && !r.isEmpty &&
+                r.width() < tela.widthPixels * 0.3f && r.height() < tela.heightPixels * 0.12f &&
+                r.centerX() > tela.widthPixels * 0.6f &&
+                r.centerY() < valor.limites.bottom && r.centerY() > valor.limites.top - alturaMax
+        }.maxWithOrNull(compareBy<No> { it.limites.centerX() }.thenBy { -it.limites.centerY() })
+    }
+
+    /** Clica no nó (ou no primeiro pai clicável); se não der, toca no centro dele. */
+    private fun clicar(n: No): Boolean {
+        var no: AccessibilityNodeInfo? = n.info
+        while (no != null) {
+            if (no.isClickable && no.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
+            no = no.parent
+        }
+        val r = n.limites
+        return !r.isEmpty && tocar(r.exactCenterX(), r.exactCenterY())
     }
 
     private fun tocar(x: Float, y: Float): Boolean {

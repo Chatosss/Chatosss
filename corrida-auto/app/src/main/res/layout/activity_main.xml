@@ -145,6 +145,12 @@
             android:text="Salvar" />
 
         <TextView style="@style/Titulo" android:text="Últimas decisões" />
+
+        <Button
+            android:id="@+id/btnDiagnostico"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Copiar diagnóstico (última oferta lida)" />
         <TextView
             android:id="@+id/txtHistorico"
             android:layout_width="match_parent"

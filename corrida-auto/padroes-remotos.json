@@ -1,6 +1,6 @@
 {
   "_comentario": "Textos que o app Corrida Auto procura na tela. Edite e faça push: os celulares baixam em poucos minutos, sem reinstalar. Aumente 'versao' a cada mudança. Listas ausentes usam o padrão embutido no app.",
-  "versao": 2,
+  "versao": 3,
   "gatilhosOferta": [
     "aceitar",
     "accept",
@@ -36,6 +36,28 @@
     "pular",
     "decline",
     "reject"
+  ],
+  "rotulosFechar": [
+    "fechar",
+    "close",
+    "x",
+    "×",
+    "✕",
+    "✖",
+    "dispensar",
+    "recusar oferta"
+  ],
+  "idsFechar": [
+    "close",
+    "fechar",
+    "dismiss",
+    "reject",
+    "refuse",
+    "decline",
+    "recusar",
+    "ignore",
+    "skip",
+    "cancel_order"
   ],
   "marcadoresViagem": [
     "finalizar viagem",

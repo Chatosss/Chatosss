@@ -26,7 +26,16 @@ Ofertas abaixo do R$/km mínimo são recusadas sozinhas: o app toca em "Recusar"
 - durante uma corrida (aí só ignora), exceto no trecho final em que ele aceitaria;
 - quando não conseguiu ler o km da oferta (para não recusar uma corrida boa por erro de leitura).
 
+Como acha o botão de recusar: texto ("Recusar"…) → botão "X" pela descrição/id ("Fechar", `…close…`)
+→ botão pequeno sem texto no canto superior direito da oferta, na altura do valor (o "X" da 99/Uber).
+Se não achar, tenta de novo 3 vezes a cada 0,4 s.
+
 No histórico: ✅ aceita, 🚫 recusada automaticamente, ❌ só ignorada.
+
+### Diagnóstico
+
+O botão **Copiar diagnóstico** copia tudo o que o app leu da última oferta e da última tela de corrida
+(textos, descrições, ids, botões clicáveis `[C]` e posições). Cole na conversa para ajustar a leitura.
 
 ### Bolinha flutuante
 
