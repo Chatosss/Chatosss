@@ -99,6 +99,20 @@ class TelaRealUberTest {
     }
 
     @Test
+    fun `corrida nao exclusiva com Tenho interesse tem a mesma leitura e o mesmo X`() {
+        // Mesma tela com o rótulo do botão trocado; o layout real desta variante ainda não foi capturado.
+        val naoExclusiva = tela.map { if (it.texto == "Aceitar") it.copy(texto = "Tenho interesse") else it }
+            .filterNot { it.texto == "Exclusivo" }
+        val padroes = Padroes().normalizado()
+        val o = assertNotNull(LeitorDeOferta.ler(naoExclusiva.mapNotNull { it.texto ?: it.descricao }, Plataforma.UBER, padroes))
+        assertEquals(1.26, o.valorPorKm(true)!!, 0.005)
+        assertFalse("Tenho interesse" in o.destino)
+        assertTrue(padroes.ehRotuloAceitar("Tenho interesse"))
+        val r = assertNotNull(LocalizadorDeRecusa.localizar(naoExclusiva, 1080, 2408, padroes))
+        assertEquals(naoExclusiva.lastIndex, r.indice)
+    }
+
+    @Test
     fun `tela inicial do Uber nao e oferta`() {
         val inicial = listOf(
             "Página inicial", "Pesquisar locais", "Procurando viagens",
