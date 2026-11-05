@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.graphics.Rect
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -30,6 +31,10 @@ class AceiteAccessibilityService : AccessibilityService() {
 
     private companion object {
         const val TAG = "CorridaAuto"
+        const val MIN_NOS_TELA_SEM_TEXTO = 10
+        const val MAX_TEXTOS_TELA_SEM_TEXTO = 5
+        const val INTERVALO_RELEITURA_MS = 700L
+        const val MAX_RELEITURAS = 25
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -74,7 +79,7 @@ class AceiteAccessibilityService : AccessibilityService() {
     }
 
     override fun onServiceConnected() {
-        Log.i(TAG, "serviço conectado, versão ${BuildConfig.VERSION_NAME}")
+        Log.i(TAG, "serviço conectado, versão ${BuildConfig.VERSION_NAME}, sdk ${Build.VERSION.SDK_INT}")
         config = Configuracoes(this)
         config.observar(aoMudarConfig)
         aplicarBolinha()
@@ -125,6 +130,12 @@ class AceiteAccessibilityService : AccessibilityService() {
 
         val oferta = LeitorDeOferta.ler(textos, plataforma)
         logarLeitura(pacote, raizes.size, nos.size, textos, oferta != null)
+        if (oferta == null && nos.size >= MIN_NOS_TELA_SEM_TEXTO && textos.size <= MAX_TEXTOS_TELA_SEM_TEXTO) {
+            logarArvore(pacote, nos)
+            agendarReleitura()
+        } else {
+            releiturasSeguidas = 0
+        }
         if (oferta == null) {
             val leitura = LeitorDeEstado.ler(textos)
             Diagnostico.registrarTela(pacote, nos, "estado lido: ${leitura?.fase ?: "nenhum"} km restante: ${leitura?.kmRestante}")
@@ -179,6 +190,34 @@ class AceiteAccessibilityService : AccessibilityService() {
             ultimasJanelas = resumo
             Log.i(TAG, "janelas(${lista.size}): $resumo")
         }
+    }
+
+    /**
+     * Tela com muitos elementos e quase nenhum texto: pode ser cache de nós desatualizado, pois o app de
+     * corrida nem sempre avisa quando o conteúdo muda. Limpa o cache e lê de novo enquanto durar.
+     */
+    private var releituraAgendada = false
+    private var releiturasSeguidas = 0
+    private val releitura = Runnable {
+        releituraAgendada = false
+        releiturasSeguidas++
+        val limpou = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && clearCache()
+        Log.i(TAG, "releitura #$releiturasSeguidas cacheLimpo=$limpou")
+        processarJanelas()
+    }
+
+    private fun agendarReleitura() {
+        if (releituraAgendada || releiturasSeguidas >= MAX_RELEITURAS) return
+        releituraAgendada = true
+        handler.postDelayed(releitura, INTERVALO_RELEITURA_MS)
+    }
+
+    private fun logarArvore(pacote: String, nos: List<No>) {
+        val arvore = nos.joinToString(" ") { n ->
+            val r = n.limites
+            "${n.classe}${if (n.clicavel) "[C]" else ""}${n.id?.let { "#" + it.substringAfter(":id/") } ?: ""}@${r.left},${r.top},${r.right},${r.bottom}"
+        }
+        arvore.chunked(3000).forEach { Log.i(TAG, "arvore $pacote nos=${nos.size}: $it") }
     }
 
     private fun logarLeitura(pacote: String, raizes: Int, nos: Int, textos: List<String>, ehOferta: Boolean) {
