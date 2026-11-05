@@ -8,7 +8,8 @@ package br.com.autocorrida.core
 data class Padroes(
     val versao: Int = 0,
     /** Indicam que a tela é uma oferta de corrida. */
-    val gatilhosOferta: List<String> = listOf("aceitar", "accept", "toque para aceitar", "nova corrida", "nova solicitacao"),
+    val gatilhosOferta: List<String> = listOf("aceitar", "accept", "toque para aceitar", "nova corrida", "nova solicitacao",
+        "tenho interesse", "est. de r$", "quero esta corrida", "nova oferta"),
     /** Oferta em sequência: busca contada a partir do desembarque. */
     val sequencia: List<String> = listOf(
         "apos o desembarque", "apos a viagem atual", "depois desta viagem", "apos esta viagem",
@@ -17,6 +18,7 @@ data class Padroes(
     /** Rótulos do botão que aceita a corrida. */
     val rotulosAceitar: List<String> = listOf(
         "aceitar", "aceitar corrida", "aceitar viagem", "toque para aceitar", "accept", "aceitar por",
+        "tenho interesse", "quero esta corrida",
     ),
     /** Rótulos do botão que recusa a corrida. */
     val rotulosRecusar: List<String> = listOf(

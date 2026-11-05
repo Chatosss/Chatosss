@@ -1,12 +1,16 @@
 {
   "_comentario": "Textos que o app Corrida Auto procura na tela. Edite e faça push: os celulares baixam em poucos minutos, sem reinstalar. Aumente 'versao' a cada mudança. Listas ausentes usam o padrão embutido no app.",
-  "versao": 3,
+  "versao": 4,
   "gatilhosOferta": [
     "aceitar",
     "accept",
     "toque para aceitar",
     "nova corrida",
-    "nova solicitação"
+    "nova solicitação",
+    "tenho interesse",
+    "est. de r$",
+    "quero esta corrida",
+    "nova oferta"
   ],
   "sequencia": [
     "após o desembarque",
@@ -25,7 +29,9 @@
     "aceitar viagem",
     "toque para aceitar",
     "accept",
-    "aceitar por"
+    "aceitar por",
+    "tenho interesse",
+    "quero esta corrida"
   ],
   "rotulosRecusar": [
     "recusar",

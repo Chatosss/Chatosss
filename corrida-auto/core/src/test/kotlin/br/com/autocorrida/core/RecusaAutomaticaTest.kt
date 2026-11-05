@@ -115,4 +115,22 @@ class Tela99Test {
         assertTrue(p.ehIdFechar("com.app99.driver:id/iv_close"))
         assertFalse(p.ehIdFechar("com.app99.driver:id/btn_accept"))
     }
+
+    @Test
+    fun `oferta da 99 com Tenho interesse`() {
+        val tela = listOf(
+            "Moto", "R$ 6,01", "Est. de R$1,16/km", "4,96 (1016)", "Verificado",
+            "8 min (4.4 km)", "Av. Vereador João Saturnino de Almeida, Boa Vista, Arapiraca",
+            "2 minutos (0.8 km)", "Av. Ver. João Saturnino de Almeida, 843, São Luiz, Arapiraca", "Tenho interesse",
+        )
+        val o = assertNotNull(LeitorDeOferta.ler(tela, Plataforma.NOVENTA_E_NOVE))
+        assertEquals(6.01, o.valor, 0.001)
+        assertEquals(4.4, o.kmBusca!!, 0.001)
+        assertEquals(0.8, o.kmViagem!!, 0.001)
+        assertTrue("São Luiz" in o.destino)
+        assertFalse("Tenho interesse" in o.destino)
+        val r = Regras(minimoPorKm = 1.5)
+        assertTrue(MotorDeRegras.deveRecusar(MotorDeRegras.avaliar(o, r), r))
+        assertTrue(PadroesAtivos.atual.ehRotuloAceitar("Tenho interesse"))
+    }
 }
