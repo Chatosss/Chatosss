@@ -9,6 +9,7 @@ import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import br.com.autocorrida.core.Decisao
+import br.com.autocorrida.core.EstadoAtual
 import br.com.autocorrida.core.LeitorDeEstado
 import br.com.autocorrida.core.LeitorDeOferta
 import br.com.autocorrida.core.MotorDeRegras
@@ -24,7 +25,16 @@ import br.com.autocorrida.core.RastreadorDeCorrida
 class AceiteAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
-    private val rastreador = RastreadorDeCorrida()
+    /** Um rastreador por app: estar livre no Uber não apaga a corrida em andamento na 99. */
+    private val rastreadores = mutableMapOf<String, RastreadorDeCorrida>()
+    private fun rastreador(pacote: String) = rastreadores.getOrPut(pacote) { RastreadorDeCorrida() }
+
+    /** Estado mais "ocupado" entre os apps: em viagem > indo buscar > livre. */
+    private fun combinar(estados: List<EstadoAtual>): EstadoAtual =
+        estados.maxByOrNull { it.fase.ordinal } ?: EstadoAtual.LIVRE
+
+    private fun estadoGeral() = combinar(rastreadores.values.map { it.estado })
+    private fun estadoParaDecisao() = combinar(rastreadores.values.map { it.estadoParaDecisao() })
     private lateinit var config: Configuracoes
 
     /** Evita avaliar/tocar várias vezes na mesma oferta (a tela gera muitos eventos). */
@@ -63,14 +73,41 @@ class AceiteAccessibilityService : AccessibilityService() {
         AtualizacaoRemota.verificar(this, forcar = true)
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        val pacote = event.packageName?.toString() ?: return
-        val plataforma = Plataforma.doPacote(pacote)
-        if (plataforma == Plataforma.DESCONHECIDA) return
-        AtualizacaoRemota.verificar(this) // no máximo a cada 5 min; roda em segundo plano
+    /** Agrupa eventos: a tela gera dezenas por segundo; processa no máximo a cada ~150 ms. */
+    private var agendado = false
+    private val processarAgora = Runnable { agendado = false; processarJanelas() }
 
-        val raizes = raizesDoApp(pacote)
-        if (raizes.isEmpty()) return
+    override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        if (!::config.isInitialized) return
+        // Ignora eventos do próprio app (bolinha, tela de configuração)
+        if (event.packageName?.toString() == packageName) return
+        if (!agendado) {
+            agendado = true
+            handler.postDelayed(processarAgora, 150)
+        }
+    }
+
+    /**
+     * Olha TODAS as janelas visíveis (o pop-up de oferta pode ser uma janela por cima de outro app)
+     * e processa só as que pertencem aos apps de corrida.
+     */
+    private fun processarJanelas() {
+        AtualizacaoRemota.verificar(this) // no máximo a cada 5 min; roda em segundo plano
+        val lista = runCatching { windows }.getOrNull().orEmpty()
+        Diagnostico.registrarJanelas {
+            lista.joinToString("\n") { w ->
+                val r = Rect().also(w::getBoundsInScreen)
+                "${w.root?.packageName ?: "?"} tipo=${w.type} camada=${w.layer} ativa=${w.isActive} @${r.toShortString()} \"${w.title ?: ""}\""
+            }
+        }
+        val porPacote = lista.mapNotNull { it.root }
+            .groupBy { it.packageName?.toString() ?: "" }
+            .filterKeys { Plataforma.doPacote(it) != Plataforma.DESCONHECIDA }
+        for ((pacote, raizes) in porPacote) processarApp(pacote, raizes)
+    }
+
+    private fun processarApp(pacote: String, raizes: List<AccessibilityNodeInfo>) {
+        val plataforma = Plataforma.doPacote(pacote)
         val nos = raizes.flatMap { coletarNos(it) }
         val textos = nos.mapNotNull { it.texto ?: it.descricao }
 
@@ -79,10 +116,10 @@ class AceiteAccessibilityService : AccessibilityService() {
             val leitura = LeitorDeEstado.ler(textos)
             Diagnostico.registrarTela(pacote, nos, "estado lido: ${leitura?.fase ?: "nenhum"} km restante: ${leitura?.kmRestante}")
             leitura?.let {
-                val estavaEmCorrida = Historico.estado.emCorrida
-                rastreador.atualizar(it)
-                Historico.estado = rastreador.estado
-                if (estavaEmCorrida != rastreador.estado.emCorrida) bolinha?.atualizar()
+                val estavaEmCorrida = estadoGeral().emCorrida
+                rastreador(pacote).atualizar(it)
+                Historico.estado = estadoGeral()
+                if (estavaEmCorrida != Historico.estado.emCorrida) bolinha?.atualizar()
                 Historico.aoMudar?.invoke()
             }
             return
@@ -95,7 +132,7 @@ class AceiteAccessibilityService : AccessibilityService() {
         ultimaAssinaturaEm = agora
 
         val regras = config.carregar()
-        val decisao = MotorDeRegras.avaliar(oferta, regras, rastreador.estadoParaDecisao())
+        val decisao = MotorDeRegras.avaliar(oferta, regras, estadoParaDecisao())
         Diagnostico.registrarOferta(
             pacote, nos,
             "valor=${oferta.valor} busca=${oferta.kmBusca} viagem=${oferta.kmViagem} " +
@@ -137,10 +174,11 @@ class AceiteAccessibilityService : AccessibilityService() {
         return t
     }
 
-    private fun raizesDoApp(pacote: String): List<AccessibilityNodeInfo> {
-        val porJanela = windows.mapNotNull { it.root }.filter { it.packageName?.toString() == pacote }
-        return porJanela.ifEmpty { listOfNotNull(rootInActiveWindow) }
-    }
+    /** Só as janelas do app indicado (nunca a janela de outro app que esteja na frente). */
+    private fun raizesDoApp(pacote: String): List<AccessibilityNodeInfo> =
+        runCatching { windows }.getOrNull().orEmpty()
+            .mapNotNull { it.root }
+            .filter { it.packageName?.toString() == pacote }
 
     private fun coletarNos(no: AccessibilityNodeInfo, saida: MutableList<No> = mutableListOf()): List<No> {
         if (saida.size > 600) return saida
